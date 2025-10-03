@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>С днём рождения — подарок</title>
+<style>
+  body{margin:0;height:100%;background:black;color:white;font-family:Arial,sans-serif;overflow:hidden;}
+  .intro, .ending {position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;
+                   padding:30px;background:rgba(0,0,0,0.8);font-size:1.3em;opacity:0;transition:opacity 1.5s;}
+  .intro.show, .ending.show {opacity:1;}
+  .big-btn{background:transparent;border:2px solid #fff;color:#fff;padding:14px 22px;border-radius:10px;
+           margin-top:18px;cursor:pointer;font-size:16px;}
+  #scene{width:100vw;height:100vh;position:relative;overflow:hidden;}
+  .ground{position:absolute;left:0;right:0;bottom:0;height:120px;background:linear-gradient(180deg,#0a0a0a,#000);}
+  svg{position:absolute;overflow:visible;width:100%;height:100%;}
+  .girl{transform:translateX(-25vw);transition:transform 3s ease-in-out;}
+  .girl.walk-in{transform:translateX(15vw);}
+  .boy{transform:translateX(25vw);transition:transform 3s ease-in-out;}
+  .boy.walk-in{transform:translateX(-10vw);}
+  .seed{opacity:0;transition:opacity 0.8s;}
+  .seed.show{opacity:1;}
+  .sapling{opacity:0;transform-origin:50% 100%;transition:all 3s ease;transform:scale(0.1);}
+  .sapling.grow{opacity:1;transform:scale(1);}
+  .heart-drop{width:20px;height:20px;position:absolute;transform:translate(-50%,-50%);opacity:0;animation:drop 0.9s linear forwards;}
+  @keyframes drop{0%{transform:translate(-50%,-50%) translateY(-40px) scale(.6);opacity:1;}100%{transform:translate(-50%,-50%) translateY(60px) scale(.9);opacity:0;}}
+  .petal{position:absolute;width:22px;height:22px;pointer-events:none;animation:petalFall linear forwards;}
+  @keyframes petalFall{0%{transform:translateY(-10vh) rotate(0) scale(.8);opacity:1;}100%{transform:translateY(110vh) rotate(360deg) scale(1.1);opacity:0;}}
+  .dance{animation:sway 1s ease-in-out infinite alternate;}
+  @keyframes sway{from{transform:translateY(0);}to{transform:translateY(-6px);}}
+  .kiss{transition:transform .8s ease;transform-origin:center;}
+  .kiss.kissed{transform:scale(0.98) translateY(-6px);}
+</style>
+</head>
+<body>
+<div id="scene">
+  <div id="intro" class="intro show">
+    <div>
+      Любви всей моей жизн—С днём рождения, мой Шохрух… сегодня мир кажется ярче, потому что это твой день.
+    </div>
+  </div>
+  <div id="ending" class="ending">
+    <div>
+      Итак, это для тебя, моя любовь, в твой особенный день. Пусть этот год будет таким же прекрасным, как и ты. 
+      С днём рождения ещё раз — всем сердцем, всегда твоя.
+      <br><button id="replayBtn" class="big-btn">Просмотреть снова</button>
+    </div>
+  </div>
+  <svg id="svgScene" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid slice">
+    <g id="sapling" class="sapling" transform="translate(500,430)">
+      <rect x="-8" y="0" width="16" height="50" rx="6" fill="#40251a"></rect>
+      <g id="foliage" transform="translate(0,-30) scale(0.4)">
+        <path d="M0 0 C -40 -40, -90 -10, -40 40 C -12 67, 0 85, 0 100 
+                 C 0 85, 12 67, 40 40 C 90 -10, 40 -40, 0 0Z" fill="#ff5577"/>
+      </g>
+    </g>
+    <g id="seed" class="seed" transform="translate(500,460)">
+      <path d="M0 0 C -8 -10, -20 -3, -8 12 C 0 22, 8 12, 8 12 C 20 -3, 8 -10, 0 0Z" fill="#ff5577"/>
+    </g>
+    <g id="girl" class="girl" transform="translate(260,330)">
+      <circle cx="0" cy="-30" r="14" fill="#ffe" />
+      <rect x="-12" y="-16" width="24" height="46" rx="12" fill="#ffbfd6"/>
+    </g>
+    <g id="boy" class="boy" transform="translate(740,330)">
+      <circle cx="0" cy="-30" r="14" fill="#ffe" />
+      <rect x="-12" y="-16" width="24" height="46" rx="8" fill="#9dd3ff"/>
+    </g>
+    <g id="giftHeart" transform="translate(500,320)" opacity="0">
+      <path d="M0 0 C -12 -14, -30 -5, -12 18 C 0 30, 12 18, 12 18 C 30 -5, 12 -14, 0 0Z" fill="#ff5577"/>
+    </g>
+  </svg>
+  <div class="ground"></div>
+</div>
+
+<audio id="bgm" loop>
+  <source src="https://cdn.pixabay.com/download/audio/2022/10/09/audio_0c1f2ef7a9.mp3?filename=romantic-piano-violin-ambient-124985.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+const intro=document.getElementById('intro'); 
+const ending=document.getElementById('ending');
+const replayBtn=document.getElementById('replayBtn');
+const girl=document.getElementById('girl'); 
+const boy=document.getElementById('boy');
+const seed=document.getElementById('seed'); 
+const sapling=document.getElementById('sapling'); 
+const giftHeart=document.getElementById('giftHeart'); 
+const bgm=document.getElementById('bgm');
+const sceneDiv=document.getElementById('scene');
+let timelineHandles=[];
+
+function clearTimeline(){
+  timelineHandles.forEach(h=>clearTimeout(h));timelineHandles=[];
+  girl.classList.remove('walk-in','dance');boy.classList.remove('walk-in','dance');
+  seed.classList.remove('show');sapling.classList.remove('grow');
+  giftHeart.style.opacity=0;
+}
+
+function dropHeartAt(x,y){
+  const d=document.createElement('div');d.className='heart-drop';
+  d.style.left=x+'px';d.style.top=y+'px';
+  sceneDiv.appendChild(d);setTimeout(()=>d.remove(),1200);
+}
+
+function spawnPetal(){
+  const el=document.createElement('div');el.className='petal';
+  el.style.left=Math.random()*100+'vw';el.style.top=(-5-Math.random()*15)+'vh';
+  el.innerHTML='<svg viewBox="0 0 32 32" width="100%" height="100%"><path d="M16 28s-12-7.3-12-15.5S10 0 16 6c6-6 12 2.5 12 6.5S16 28 16 28z" fill="#ff7a9b"/></svg>';
+  document.body.appendChild(el);setTimeout(()=>el.remove(),9000);
+}
+
+function animateGiftHeart(){
+  const gBox=girl.getBoundingClientRect();const bBox=boy.getBoundingClientRect();
+  giftHeart.style.opacity=1;
+  giftHeart.style.transform='translate('+ (gBox.left+40)+'px,'+(gBox.top+20)+'px) scale(0.9)';
+  giftHeart.style.transition='transform 1s ease, opacity 0.4s';
+  setTimeout(()=>{ giftHeart.style.transform='translate('+ (bBox.left)+'px,'+(bBox.top+20)+'px) scale(1.1)'; },400);
+}
+
+function playSequence(){
+  clearTimeline();ending.classList.remove('show');
+  setTimeout(()=>{girl.classList.add('walk-in');},500);
+  setTimeout(()=>{seed.classList.add('show');},4000);
+  setTimeout(()=>{sapling.classList.add('grow');},6000);
+  setTimeout(()=>{boy.classList.add('walk-in');},9000);
+  setTimeout(()=>{animateGiftHeart();},12000);
+  setTimeout(()=>{
+    girl.classList.add('dance');boy.classList.add('dance');
+    let petals=setInterval(spawnPetal,600);
+    timelineHandles.push(setTimeout(()=>clearInterval(petals),8000));
+  },14000);
+  setTimeout(()=>{girl.classList.add('kissed');boy.classList.add('kissed');},20000);
+  setTimeout(()=>{ending.classList.add('show');},22000);
+}
+
+// Start animation automatically after showing intro text for 3 seconds
+window.addEventListener('load',()=>{
+  setTimeout(()=>{
+    intro.classList.remove('show'); 
+    bgm.play();
+    playSequence();
+  },3000);
+});
+
+replayBtn.addEventListener('click',()=>{
+  ending.classList.remove('show');clearTimeline();
+  playSequence();
+});
+</script>
+</body>
+</html>
